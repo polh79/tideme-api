@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//h/WorkFlow/tideme/data/**)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Read(//h/WorkFlow/tideme/**)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
