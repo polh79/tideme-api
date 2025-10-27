@@ -30,7 +30,12 @@ export default function Home() {
 
   // Charger les données des ports
   useEffect(() => {
+    // Flag pour éviter les appels en double (React strict mode)
+    let isMounted = true;
+
     const fetchPortData = async (portId: string, index: number) => {
+      if (!isMounted) return;
+
       try {
         const response = await fetch('/api/tides', {
           method: 'POST',
@@ -44,6 +49,8 @@ export default function Home() {
 
         const data = await response.json();
 
+        if (!isMounted) return;
+
         setPorts(prev => {
           const newPorts = [...prev];
           newPorts[index] = {
@@ -55,6 +62,8 @@ export default function Home() {
           return newPorts;
         });
       } catch (error) {
+        if (!isMounted) return;
+
         setPorts(prev => {
           const newPorts = [...prev];
           newPorts[index] = {
@@ -68,11 +77,22 @@ export default function Home() {
       }
     };
 
-    // Charger les 3 ports en parallèle
-    ports.forEach((port, index) => {
-      fetchPortData(port.portId, index);
+    // Charger les 3 ports en parallèle UNE SEULE FOIS
+    const portsToLoad = [
+      { portId: 'dunkerque', index: 0 },
+      { portId: 'le-crouesty', index: 1 },
+      { portId: 'biarritz', index: 2 },
+    ];
+
+    portsToLoad.forEach(({ portId, index }) => {
+      fetchPortData(portId, index);
     });
-  }, []);
+
+    // Cleanup pour éviter les updates après unmount
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Ne se déclenche QU'UNE FOIS au montage
 
   return (
     <div style={{
