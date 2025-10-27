@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFromCache, setInCache } from '@/lib/cache';
-import { fetchAllPortData } from '@/lib/stormglass';
+import { fetchTideData } from '@/lib/stormglass';
 import {
   calculateCurrentWaterHeight,
   calculateWaterLevel,
   calculateCoefficient,
 } from '@/lib/tideCalculator';
-import { calculateSunData, calculateMoonPhase, calculateIsDay } from '@/lib/astreCalculator';
+import { DEFAULT_CACHE_TTL } from '@/lib/constants';
 import portsData from '@/data/ports.json';
 import type { Port, TideExtreme } from '@/types';
 
@@ -32,27 +32,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Chercher en cache (données API brutes)
-    const cacheKey = `port:${portId}:static`;
-    let staticData = await getFromCache<any>(cacheKey);
+    // 2. Chercher en cache (données de marées)
+    const cacheKey = `port:${portId}:tides`;
+    let tideCache = await getFromCache<any>(cacheKey);
     let cacheHit = true;
 
-    if (!staticData) {
+    if (!tideCache) {
       // Cache miss → Appeler StormGlass API
       console.log(`[CACHE MISS] Port ${portId} - Calling StormGlass API`);
       cacheHit = false;
 
-      staticData = await fetchAllPortData(port as Port);
+      tideCache = await fetchTideData(port as Port);
 
-      // Mettre en cache pour 6h (21600 secondes)
-      await setInCache(cacheKey, staticData, 21600);
+      // Mettre en cache pour 12h
+      await setInCache(cacheKey, tideCache, DEFAULT_CACHE_TTL);
     } else {
-      console.log(`[CACHE HIT] Port ${portId} - From Redis cache`);
+      console.log(`[CACHE HIT] Port ${portId} - From cache`);
     }
 
     // 3. Calculer les données temps réel (TOUJOURS frais)
     const now = new Date();
-    const tides: TideExtreme[] = staticData.tides;
+    const tides: TideExtreme[] = tideCache.tides;
 
     // Trouver les 2 marées qui encadrent maintenant
     let prevExtreme: TideExtreme | null = null;
@@ -80,16 +80,23 @@ export async function POST(request: NextRequest) {
     // Calculer hauteur actuelle (interpolation sinusoïdale)
     const currentHeight = calculateCurrentWaterHeight(prevExtreme, nextExtreme, now);
 
-    // Trouver maxTide et minTide des prochaines 24h
-    const next24hTides = tides.filter(
+    // Trouver maxTide et minTide des prochaines marées
+    const futureTides = tides.filter(
       (t) => new Date(t.time).getTime() > now.getTime()
-    ).slice(0, 4); // 4 prochaines marées
+    );
 
-    const highTides = next24hTides.filter((t) => t.type === 'high');
-    const lowTides = next24hTides.filter((t) => t.type === 'low');
+    const highTides = futureTides.filter((t) => t.type === 'high');
+    const lowTides = futureTides.filter((t) => t.type === 'low');
 
-    const maxTide = highTides[0] || next24hTides[0];
-    const minTide = lowTides[0] || next24hTides[1];
+    const maxTide = highTides[0] || futureTides[0];
+    const minTide = lowTides[0] || futureTides[1];
+
+    if (!maxTide || !minTide) {
+      return NextResponse.json(
+        { error: 'Cannot find future tide extremes' },
+        { status: 500 }
+      );
+    }
 
     // Calculer coefficient
     const coefficient = calculateCoefficient(maxTide.height, minTide.height);
@@ -97,33 +104,17 @@ export async function POST(request: NextRequest) {
     // Calculer niveau d'eau normalisé (0-1) pour animation
     const waterLevel = calculateWaterLevel(currentHeight, minTide.height, maxTide.height);
 
-    // 4. Calculer les données astronomiques
-    const sun = calculateSunData(port as Port, now);
-    const moon = calculateMoonPhase(now);
-    const isDay = calculateIsDay(sun.sunrise, sun.sunset, now);
+    // Déterminer si la marée monte ou descend
+    const isRising = prevExtreme.type === 'low';
 
-    // 5. Calculer temps jusqu'à prochaine marée
-    const timeUntilNext = Math.round(
-      (new Date(nextExtreme.time).getTime() - now.getTime()) / 60000
-    ); // minutes
-
-    const hours = Math.floor(timeUntilNext / 60);
-    const minutes = timeUntilNext % 60;
-
-    // 6. Calculer le score surf (simple pour l'instant)
-    const surfScore = calculateSurfScore(
-      staticData.weather.waveHeight,
-      staticData.weather.wavePeriod,
-      staticData.weather.windSpeed
-    );
-
-    // 7. Réponse avec toutes les données
+    // 4. Réponse avec toutes les données de marées
     return NextResponse.json({
       // Métadonnées
       meta: {
         cacheHit,
         timestamp: now.toISOString(),
-        apiCallsUsed: cacheHit ? 0 : 2, // 2 calls si miss (tides + weather)
+        fetchedAt: tideCache.fetchedAt,
+        apiCallsUsed: cacheHit ? 0 : 1, // 1 seul call si miss (tides only)
       },
 
       // Port
@@ -132,57 +123,21 @@ export async function POST(request: NextRequest) {
         name: port.name,
         latitude: port.latitude,
         longitude: port.longitude,
+        region: port.region,
+        department: port.department,
+        emoji: port.emoji,
       },
 
       // Marées (statiques + calculées)
       tide: {
-        coefficient,
+        extremes: tides, // Tous les extremes sur 48h
         maxTide,
         minTide,
-        currentHeight: Math.round(currentHeight * 100) / 100,
-        waterLevel: Math.round(waterLevel * 100) / 100,
-        extremes: next24hTides, // Toutes les marées des prochaines 24h
+        currentHeight: Math.round(currentHeight * 100) / 100, // 2 décimales
+        coefficient,
+        isRising,
+        waterLevel: Math.round(waterLevel * 100) / 100, // 2 décimales
       },
-
-      // Prochaine marée
-      nextTide: {
-        type: nextExtreme.type,
-        time: nextExtreme.time,
-        height: nextExtreme.height,
-        timeUntil: `${hours}h${minutes.toString().padStart(2, '0')}`,
-        status: nextExtreme.type === 'high' ? 'rising' : 'falling',
-      },
-
-      // Météo (depuis cache)
-      weather: {
-        airTemp: staticData.weather.airTemp,
-        waterTemp: {
-          value: staticData.weather.waterTemp,
-          unit: '°C' as const,
-        },
-        windSpeed: staticData.weather.windSpeed,
-        windDirection: staticData.weather.windDirection,
-        cloudCover: staticData.weather.cloudCover,
-        precipitation: staticData.weather.precipitation,
-        pressure: staticData.weather.pressure,
-        humidity: staticData.weather.humidity,
-      },
-
-      // Surf (depuis cache + score calculé)
-      surf: {
-        waveHeight: staticData.weather.waveHeight,
-        wavePeriod: staticData.weather.wavePeriod,
-        waveDirection: staticData.weather.waveDirection,
-        swellHeight: staticData.weather.swellHeight,
-        swellPeriod: staticData.weather.swellPeriod,
-        swellDirection: staticData.weather.swellDirection,
-        score: surfScore,
-      },
-
-      // Astronomie (calculée)
-      sun,
-      moon,
-      isDay,
     });
   } catch (error: any) {
     console.error('[API /tides] Error:', error);
@@ -195,28 +150,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Calcule un score surf simple (0-5 étoiles)
- */
-function calculateSurfScore(
-  waveHeight: number,
-  wavePeriod: number,
-  windSpeed: number
-): number {
-  let score = 0;
-
-  // Hauteur vague (0-2 étoiles)
-  if (waveHeight >= 0.5 && waveHeight <= 2.5) score += 2;
-  else if (waveHeight > 0.3 && waveHeight < 3) score += 1;
-
-  // Période vague (0-2 étoiles)
-  if (wavePeriod >= 8) score += 2;
-  else if (wavePeriod >= 6) score += 1;
-
-  // Vent (0-1 étoile - inversé: moins = mieux)
-  if (windSpeed < 10) score += 1;
-
-  return Math.min(5, score);
 }

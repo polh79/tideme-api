@@ -97,7 +97,7 @@ export default function Home() {
             🌊 TideME API Monitor
           </h1>
           <p style={{ margin: '0.5rem 0 0', color: '#666', fontSize: '1.1rem' }}>
-            Dashboard de monitoring - API Marées & Surf
+            Dashboard de monitoring - API Marées
           </p>
           <div style={{
             marginTop: '1rem',
@@ -231,6 +231,79 @@ export default function Home() {
                 </div>
               )}
 
+              {/* Tide Info */}
+              {port.data?.tide && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '1rem',
+                  background: '#f8f9fa',
+                  borderRadius: '8px',
+                }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '0.75rem',
+                    marginBottom: '0.75rem',
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#999', marginBottom: '0.25rem' }}>
+                        Coefficient
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#667eea' }}>
+                        {port.data.tide.coefficient}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#999', marginBottom: '0.25rem' }}>
+                        Hauteur actuelle
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#667eea' }}>
+                        {port.data.tide.currentHeight}m
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#999', marginBottom: '0.25rem' }}>
+                        Prochaine haute mer
+                      </div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#16a34a' }}>
+                        {port.data.tide.maxTide.height}m
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                        {new Date(port.data.tide.maxTide.time).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#999', marginBottom: '0.25rem' }}>
+                        Prochaine basse mer
+                      </div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#dc2626' }}>
+                        {port.data.tide.minTide.height}m
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                        {new Date(port.data.tide.minTide.time).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: '0.5rem',
+                    background: port.data.tide.isRising ? '#d4f4dd' : '#ffe0e0',
+                    borderRadius: '6px',
+                    textAlign: 'center',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    color: port.data.tide.isRising ? '#16a34a' : '#dc2626',
+                  }}>
+                    {port.data.tide.isRising ? '↑ Marée montante' : '↓ Marée descendante'}
+                  </div>
+                </div>
+              )}
+
               {/* JSON Data */}
               {port.data && (
                 <details style={{ marginTop: '1rem' }}>
@@ -243,7 +316,7 @@ export default function Home() {
                     color: '#555',
                     userSelect: 'none',
                   }}>
-                    📊 Voir les données JSON
+                    📊 Voir les données JSON complètes
                   </summary>
                   <pre style={{
                     marginTop: '0.5rem',
@@ -283,7 +356,8 @@ export default function Home() {
             <div>📍 <strong>3 ports</strong> en mode dev</div>
             <div>⏰ <strong>Refresh:</strong> toutes les 12h</div>
             <div>💾 <strong>Cache:</strong> 12h TTL</div>
-            <div>🌐 <strong>API:</strong> StormGlass</div>
+            <div>🌊 <strong>Données:</strong> Marées uniquement</div>
+            <div>📞 <strong>API calls:</strong> ~6/jour</div>
           </div>
         </div>
       </div>

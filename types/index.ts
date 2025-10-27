@@ -1,4 +1,4 @@
-// Types pour l'application TideME
+// Types pour l'API TideME (Marées uniquement)
 
 export interface Coordinates {
   latitude: number;
@@ -23,32 +23,11 @@ export interface TideExtreme {
 }
 
 export interface TideData {
-  maxTide: TideExtreme;
-  minTide: TideExtreme;
-  currentHeight: number; // Hauteur actuelle calculée
+  extremes: TideExtreme[]; // Tous les extremes sur 48h
+  maxTide: TideExtreme; // Prochaine haute mer
+  minTide: TideExtreme; // Prochaine basse mer
+  currentHeight: number; // Hauteur actuelle calculée (mètres)
   coefficient: number; // 20-120
-}
-
-export interface SunData {
-  sunrise: string; // HH:mm
-  sunset: string; // HH:mm
-}
-
-export interface MoonPhase {
-  phase: 'new' | 'waxing_crescent' | 'first_quarter' | 'waxing_gibbous' | 'full' | 'waning_gibbous' | 'last_quarter' | 'waning_crescent';
-  illumination: number; // 0-1
-}
-
-export interface WaterTemperature {
-  value: number; // en °C
-  unit: '°C';
-}
-
-export interface AppData {
-  port: Port;
-  tide: TideData;
-  sun: SunData;
-  moon: MoonPhase;
-  waterTemp: WaterTemperature;
-  isDay: boolean;
+  isRising: boolean; // Marée montante ou descendante
+  waterLevel: number; // Niveau normalisé 0-1 pour animation
 }

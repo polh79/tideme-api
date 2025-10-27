@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAllPortData } from '@/lib/stormglass';
+import { fetchTideData } from '@/lib/stormglass';
 import { setInCache } from '@/lib/cache';
 import { POPULAR_PORTS, DEFAULT_CACHE_TTL } from '@/lib/constants';
 import portsData from '@/data/ports.json';
@@ -7,8 +7,8 @@ import type { Port } from '@/types';
 
 /**
  * GET /api/cron/refresh
- * Cronjob Vercel : pré-charge les ports populaires dans le cache
- * Déclenché toutes les 6h : 02h, 08h, 14h, 20h UTC
+ * Cronjob Vercel : pré-charge les 3 ports dans le cache
+ * Déclenché toutes les 12h : 02h, 14h UTC
  */
 export async function GET(request: NextRequest) {
   // Vérifier l'authentification (Vercel Cron Secret)
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  console.log('[CRON] 🚀 Starting refresh of popular ports');
+  console.log('[CRON] 🚀 Starting tide refresh for 3 ports');
   const startTime = Date.now();
 
   const results: Array<{
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     duration?: number;
   }> = [];
 
-  // Pré-charger chaque port populaire
+  // Pré-charger chaque port
   for (const portId of POPULAR_PORTS) {
     const portStartTime = Date.now();
 
@@ -47,11 +47,11 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // Appeler l'API StormGlass
-      const data = await fetchAllPortData(port as Port);
+      // Appeler l'API StormGlass pour les marées uniquement
+      const data = await fetchTideData(port as Port);
 
-      // Mettre en cache pour 6h
-      const cacheKey = `port:${portId}:static`;
+      // Mettre en cache pour 12h
+      const cacheKey = `port:${portId}:tides`;
       await setInCache(cacheKey, data, DEFAULT_CACHE_TTL);
 
       const duration = Date.now() - portStartTime;
@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
 
   console.log(`[CRON] ✨ Refresh complete in ${totalDuration}ms`);
   console.log(`[CRON] 📊 Success: ${successCount}, Errors: ${errorCount}`);
+  console.log(`[CRON] 📞 API calls used: ${successCount} (1 per port)`);
 
   return NextResponse.json({
     success: true,
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
       total: results.length,
       success: successCount,
       errors: errorCount,
+      apiCallsUsed: successCount, // 1 call par port (tides only)
     },
     results,
   });
