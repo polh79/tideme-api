@@ -12,6 +12,7 @@ export interface Port {
   longitude: number;
   region: string;
   department: string;
+  emoji?: string;
   distance?: number;
 }
 

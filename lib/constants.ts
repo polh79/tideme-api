@@ -1,46 +1,19 @@
 /**
- * Liste des ports les plus populaires à pré-charger
- * (Top ports Bretagne + Atlantique)
+ * Liste des ports à pré-charger pour le développement
+ * (3 ports uniquement avec abonnement gratuit StormGlass)
  */
 export const POPULAR_PORTS = [
+  'dunkerque',
   'le-crouesty',
-  'la-trinite-sur-mer',
-  'port-navalo',
-  'vannes',
-  'quiberon',
-  'lorient',
-  'concarneau',
-  'brest',
-  'saint-malo',
-  'la-rochelle',
-  'les-sables-d-olonne',
-  'pornic',
-  'le-pouliguen',
-  'la-baule',
-  'st-nazaire',
-  'crouesty',
-  'arradon',
-  'locmariaquer',
-  'carnac',
-  'etel',
-  'groix',
-  'belle-ile',
-  'houat',
-  'hoedic',
-  'penestin',
-  'piriac-sur-mer',
-  'le-croisic',
-  'pornichet',
-  'le-pouliguen',
-  'batz-sur-mer',
+  'biarritz',
 ] as const;
 
 /**
- * TTL par défaut pour le cache (6 heures en secondes)
+ * TTL par défaut pour le cache (12 heures en secondes)
  */
-export const DEFAULT_CACHE_TTL = 6 * 60 * 60; // 21600 secondes
+export const DEFAULT_CACHE_TTL = 12 * 60 * 60; // 43200 secondes
 
 /**
  * Horaires des cronjobs de refresh (UTC)
  */
-export const CRON_SCHEDULE = '0 2,8,14,20 * * *'; // 02h, 08h, 14h, 20h UTC
+export const CRON_SCHEDULE = '0 2,14 * * *'; // 02h, 14h UTC (toutes les 12h)
