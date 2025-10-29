@@ -85,8 +85,12 @@ export async function GET(request: NextRequest) {
   console.log(`[CRON] 📊 Success: ${successCount}, Errors: ${errorCount}`);
   console.log(`[CRON] 📞 API calls used: ${successCount} (1 per port)`);
 
+  // Déterminer si c'est un succès global (au moins 1 port OK)
+  const isSuccess = successCount > 0;
+
   return NextResponse.json({
-    success: true,
+    success: isSuccess,
+    warning: errorCount > 0 ? `${errorCount} port(s) failed` : undefined,
     timestamp: new Date().toISOString(),
     duration: totalDuration,
     stats: {

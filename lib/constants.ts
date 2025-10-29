@@ -1,11 +1,9 @@
 /**
  * Liste des ports à pré-charger pour le développement
- * (3 ports uniquement avec abonnement gratuit StormGlass)
+ * MODE DEBUG: 1 seul port pour économiser les API calls
  */
 export const POPULAR_PORTS = [
-  'dunkerque',
   'le-crouesty',
-  'biarritz',
 ] as const;
 
 /**
