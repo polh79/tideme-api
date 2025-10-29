@@ -9,7 +9,9 @@
       "Read(//h/WorkFlow/tideme/**)",
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git restore:*)",
+      "Bash(vercel env:*)"
     ],
     "deny": [],
     "ask": []
