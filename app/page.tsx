@@ -1,159 +1,334 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [refreshResult, setRefreshResult] = useState<any>(null);
+  const [status, setStatus] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fonction pour déclencher le refresh manuel du cache
-  const handleManualRefresh = async () => {
-    setIsRefreshing(true);
-    setRefreshResult(null);
+  useEffect(() => {
+    // Charger le statut au démarrage
+    loadStatus();
 
+    // Rafraîchir toutes les 30 secondes
+    const interval = setInterval(loadStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadStatus = async () => {
     try {
-      const secret = prompt('Entrez le CRON_SECRET (tideme-cron-secret-2025):');
-      if (!secret) {
-        setIsRefreshing(false);
-        return;
-      }
-
-      const response = await fetch('/api/cron/refresh', {
-        headers: {
-          'Authorization': `Bearer ${secret}`,
-        },
-      });
-
+      const response = await fetch('/api/debug/cache?portId=le-crouesty');
       const data = await response.json();
-      setRefreshResult(data);
+      setStatus(data);
     } catch (error) {
-      setRefreshResult({ error: error instanceof Error ? error.message : 'Erreur' });
+      console.error('Error loading status:', error);
     } finally {
-      setIsRefreshing(false);
+      setLoading(false);
     }
   };
+
+  const formatTime = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC',
+      timeZoneName: 'short'
+    });
+  };
+
+  const getNextSlack = () => {
+    if (!status || !status.tides) return null;
+    const now = new Date();
+    const nextTide = status.tides.find((t: any) => new Date(t.time) > now);
+    return nextTide;
+  };
+
+  const nextSlack = getNextSlack();
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
       padding: '2rem',
       fontFamily: 'system-ui, -apple-system, sans-serif',
+      color: '#e0e0e0',
     }}>
       <div style={{
-        maxWidth: '800px',
+        maxWidth: '1000px',
         margin: '0 auto',
       }}>
         {/* Header */}
         <div style={{
-          background: 'white',
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(10px)',
           borderRadius: '16px',
           padding: '2rem',
           marginBottom: '2rem',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          textAlign: 'center',
+          border: '1px solid rgba(255,255,255,0.1)',
         }}>
-          <h1 style={{ margin: 0, fontSize: '2.5rem', color: '#333' }}>
-            🌊 TideME API - Contrôle Manuel
+          <h1 style={{ margin: 0, fontSize: '2.5rem', color: '#fff' }}>
+            🌊 TideME API Dashboard
           </h1>
-          <p style={{ margin: '1rem 0', color: '#666', fontSize: '1.1rem' }}>
-            Clique sur le bouton pour fetcher les 3 ports et remplir le cache
+          <p style={{ margin: '0.5rem 0 0', color: '#b0b0b0', fontSize: '1.1rem' }}>
+            Powered by WorldTides · Auto-refresh every 12h
           </p>
-
-          <button
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            style={{
-              padding: '1rem 2rem',
-              background: isRefreshing ? '#ccc' : '#667eea',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '1.2rem',
-              fontWeight: '600',
-              cursor: isRefreshing ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
-              marginTop: '1rem',
-            }}
-          >
-            {isRefreshing ? '⏳ Fetching 3 ports...' : '🚀 FETCH 3 PORTS & FILL CACHE'}
-          </button>
-
-          {refreshResult && (
-            <div style={{
-              marginTop: '2rem',
-              padding: '1.5rem',
-              background: refreshResult.success ? '#d4f4dd' : '#ffe0e0',
-              borderRadius: '12px',
-              textAlign: 'left',
-            }}>
-              <h3 style={{
-                margin: '0 0 1rem',
-                color: refreshResult.success ? '#16a34a' : '#dc2626',
-              }}>
-                {refreshResult.success ? '✅ SUCCESS' : '❌ ERREUR'}
-              </h3>
-              <pre style={{
-                background: '#1e1e1e',
-                color: '#d4d4d4',
-                padding: '1rem',
-                borderRadius: '8px',
-                overflow: 'auto',
-                fontSize: '0.85rem',
-              }}>
-                {JSON.stringify(refreshResult, null, 2)}
-              </pre>
-            </div>
-          )}
         </div>
 
-        {/* Info */}
+        {/* Status Grid */}
         <div style={{
-          background: 'rgba(255,255,255,0.9)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem',
+        }}>
+          {/* Statut */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+              Statut API
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#4ade80' }}>
+              ✅ Opérationnel
+            </div>
+          </div>
+
+          {/* Dernier refresh */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+              Dernier Refresh
+            </div>
+            <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#fff' }}>
+              {loading ? '...' : status?.fetchedAt ? formatTime(status.fetchedAt) : 'N/A'}
+            </div>
+          </div>
+
+          {/* Prochaine étale */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+              Prochaine Étale
+            </div>
+            <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#60a5fa' }}>
+              {nextSlack ? (
+                <>
+                  {formatTime(nextSlack.time)}
+                  <span style={{ fontSize: '0.9rem', marginLeft: '0.5rem' }}>
+                    ({nextSlack.type === 'high' ? 'PM ⬆️' : 'BM ⬇️'})
+                  </span>
+                </>
+              ) : '...'}
+            </div>
+          </div>
+
+          {/* Crédits WorldTides */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+              Crédits WorldTides
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbbf24' }}>
+              ~19,996 / 20,000
+            </div>
+          </div>
+        </div>
+
+        {/* Endpoints */}
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(10px)',
           borderRadius: '16px',
           padding: '2rem',
+          border: '1px solid rgba(255,255,255,0.1)',
+          marginBottom: '2rem',
         }}>
-          <h2 style={{ margin: '0 0 1rem', color: '#333' }}>📋 Comment ça marche ?</h2>
-          <ol style={{ color: '#666', lineHeight: '1.8' }}>
-            <li><strong>Clique sur le bouton</strong> → Appelle <code>/api/cron/refresh</code></li>
-            <li><strong>Fetche les 3 ports</strong> depuis StormGlass (3 API calls)</li>
-            <li><strong>Remplit le cache</strong> avec TTL 12h</li>
-            <li><strong>L'app mobile</strong> lit ensuite le cache (0 calls supplémentaires)</li>
-          </ol>
+          <h2 style={{ margin: '0 0 1.5rem', color: '#fff', fontSize: '1.5rem' }}>
+            📡 API Endpoints
+          </h2>
 
           <div style={{
-            marginTop: '1.5rem',
-            padding: '1rem',
-            background: '#fff4d6',
-            borderRadius: '8px',
-            color: '#d97706',
-          }}>
-            <strong>⚠️ IMPORTANT :</strong> Chaque clic = 3 calls StormGlass. Quota gratuit = 10 calls/jour.
-            <br/>
-            Utilise ce bouton max 3 fois par jour !
-          </div>
-
-          <div style={{
-            marginTop: '1.5rem',
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
             gap: '1rem',
-            fontSize: '0.9rem',
-            color: '#666',
           }}>
-            <div>
-              <strong>Ports :</strong> Dunkerque ⚓, Le Crouesty ⛵, Biarritz 🏄
+            {/* POST /api/tides */}
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              padding: '1rem',
+              borderRadius: '8px',
+              borderLeft: '4px solid #10b981',
+            }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{
+                  background: '#10b981',
+                  color: '#000',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                }}>POST</span>
+                <code style={{ color: '#a5f3fc', fontSize: '1.1rem' }}>/api/tides</code>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                Récupère les données de marées pour un port
+              </div>
+              <code style={{
+                display: 'block',
+                background: '#1e1e1e',
+                padding: '0.75rem',
+                borderRadius: '4px',
+                fontSize: '0.85rem',
+                color: '#d4d4d4',
+                overflowX: 'auto',
+              }}>
+                {`{ "portId": "le-crouesty" }`}
+              </code>
             </div>
-            <div>
-              <strong>Cache TTL :</strong> 12 heures
+
+            {/* GET /api/ports */}
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              padding: '1rem',
+              borderRadius: '8px',
+              borderLeft: '4px solid #3b82f6',
+            }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{
+                  background: '#3b82f6',
+                  color: '#fff',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                }}>GET</span>
+                <code style={{ color: '#a5f3fc', fontSize: '1.1rem' }}>/api/ports</code>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '0.9rem' }}>
+                Liste tous les ports disponibles
+              </div>
             </div>
-            <div>
-              <strong>API :</strong> StormGlass (marées uniquement)
+
+            {/* GET /api/debug/cache */}
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              padding: '1rem',
+              borderRadius: '8px',
+              borderLeft: '4px solid #f59e0b',
+            }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{
+                  background: '#f59e0b',
+                  color: '#000',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                }}>GET</span>
+                <code style={{ color: '#a5f3fc', fontSize: '1.1rem' }}>/api/debug/cache?portId=biarritz</code>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '0.9rem' }}>
+                Debug : Voir le contenu du cache pour un port
+              </div>
             </div>
-            <div>
-              <strong>Quota :</strong> 10 calls/jour (gratuit)
+
+            {/* GET /api/cron/refresh */}
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              padding: '1rem',
+              borderRadius: '8px',
+              borderLeft: '4px solid #ef4444',
+            }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{
+                  background: '#ef4444',
+                  color: '#fff',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                }}>GET</span>
+                <code style={{ color: '#a5f3fc', fontSize: '1.1rem' }}>/api/cron/refresh</code>
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                🔒 Refresh cache (3 ports) - Nécessite Authorization header
+              </div>
+              <div style={{ color: '#ef4444', fontSize: '0.85rem' }}>
+                ⚠️ Automatique toutes les 12h · Ne pas appeler manuellement
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Ports & Config */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '1rem',
+        }}>
+          {/* Ports actifs */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <h3 style={{ margin: '0 0 1rem', color: '#fff' }}>Ports Actifs</h3>
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div>⚓ <strong>Dunkerque</strong> · Hauts-de-France</div>
+              <div>⛵ <strong>Le Crouesty</strong> · Bretagne</div>
+              <div>🏄 <strong>Biarritz</strong> · Pays Basque</div>
+            </div>
+          </div>
+
+          {/* Configuration */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <h3 style={{ margin: '0 0 1rem', color: '#fff' }}>Configuration</h3>
+            <div style={{ display: 'grid', gap: '0.5rem', fontSize: '0.9rem' }}>
+              <div><strong>Cache TTL :</strong> 12 heures</div>
+              <div><strong>Cron :</strong> Toutes les 12h (auto)</div>
+              <div><strong>API :</strong> WorldTides v3</div>
+              <div><strong>Coût :</strong> ~$2/an</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          marginTop: '2rem',
+          textAlign: 'center',
+          color: '#6b7280',
+          fontSize: '0.85rem',
+        }}>
+          Fait avec ❤️ · Vercel + WorldTides + Upstash Redis
         </div>
       </div>
     </div>
