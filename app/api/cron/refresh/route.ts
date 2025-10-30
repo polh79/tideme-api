@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchTideData } from '@/lib/stormglass';
+import { fetchTideData } from '@/lib/worldtides'; // ✅ Changed from stormglass to worldtides
 import { setInCache } from '@/lib/cache';
 import { POPULAR_PORTS, DEFAULT_CACHE_TTL } from '@/lib/constants';
 import portsData from '@/data/ports.json';

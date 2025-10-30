@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFromCache, setInCache } from '@/lib/cache';
-import { fetchTideData } from '@/lib/stormglass';
+import { fetchTideData } from '@/lib/worldtides'; // ✅ Changed from stormglass to worldtides
 import {
   calculateCurrentWaterHeight,
   calculateWaterLevel,
