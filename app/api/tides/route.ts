@@ -58,15 +58,31 @@ export async function POST(request: NextRequest) {
     let prevExtreme: TideExtreme | null = null;
     let nextExtreme: TideExtreme | null = null;
 
-    for (let i = 0; i < tides.length - 1; i++) {
-      const t1 = new Date(tides[i].time).getTime();
-      const t2 = new Date(tides[i + 1].time).getTime();
-      const nowTime = now.getTime();
+    // CAS 1 : Toutes les marées sont dans le futur → estimer la précédente (-6h)
+    if (tides.length > 0 && new Date(tides[0].time).getTime() > now.getTime()) {
+      const firstTide = tides[0];
 
-      if (nowTime >= t1 && nowTime <= t2) {
-        prevExtreme = tides[i];
-        nextExtreme = tides[i + 1];
-        break;
+      // Soustraire 6h pour avoir la marée précédente estimée
+      const prevTime = new Date(new Date(firstTide.time).getTime() - 6 * 60 * 60 * 1000);
+
+      prevExtreme = {
+        time: prevTime.toISOString(),
+        height: firstTide.type === 'low' ? 4.0 : 0.5, // Inverse : BM→PM, PM→BM
+        type: firstTide.type === 'low' ? 'high' : 'low',
+      };
+      nextExtreme = firstTide;
+    } else {
+      // CAS 2 : Normal - chercher 2 marées qui encadrent maintenant
+      for (let i = 0; i < tides.length - 1; i++) {
+        const t1 = new Date(tides[i].time).getTime();
+        const t2 = new Date(tides[i + 1].time).getTime();
+        const nowTime = now.getTime();
+
+        if (nowTime >= t1 && nowTime <= t2) {
+          prevExtreme = tides[i];
+          nextExtreme = tides[i + 1];
+          break;
+        }
       }
     }
 
