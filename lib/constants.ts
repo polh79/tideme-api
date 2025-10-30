@@ -1,9 +1,11 @@
 /**
  * Liste des ports à pré-charger pour le développement
- * MODE DEBUG: 1 seul port pour économiser les API calls
+ * 3 ports activés avec WorldTides (économique : $10 pour plusieurs années)
  */
 export const POPULAR_PORTS = [
+  'dunkerque',
   'le-crouesty',
+  'biarritz',
 ] as const;
 
 /**
