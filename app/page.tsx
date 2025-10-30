@@ -316,6 +316,7 @@ export default function Home() {
               <div><strong>Cache TTL :</strong> 12 heures</div>
               <div><strong>Cron :</strong> Toutes les 12h (auto)</div>
               <div><strong>API :</strong> WorldTides v3</div>
+              <div><strong>Endpoint :</strong> <code style={{ color: '#a5f3fc' }}>api.worldtides.info/v3</code></div>
               <div><strong>Coût :</strong> ~$2/an</div>
             </div>
           </div>
