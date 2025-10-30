@@ -2,16 +2,28 @@
 
 import { useState, useEffect } from 'react';
 
+type PortId = 'dunkerque' | 'le-crouesty' | 'biarritz';
+
 export default function Home() {
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<PortId>('dunkerque');
+  const [portData, setPortData] = useState<Record<PortId, any>>({
+    'dunkerque': null,
+    'le-crouesty': null,
+    'biarritz': null,
+  });
 
   useEffect(() => {
     // Charger le statut au démarrage
     loadStatus();
+    loadAllPorts();
 
     // Rafraîchir toutes les 30 secondes
-    const interval = setInterval(loadStatus, 30000);
+    const interval = setInterval(() => {
+      loadStatus();
+      loadAllPorts();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -24,6 +36,24 @@ export default function Home() {
       console.error('Error loading status:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAllPorts = async () => {
+    const ports: PortId[] = ['dunkerque', 'le-crouesty', 'biarritz'];
+
+    for (const portId of ports) {
+      try {
+        const response = await fetch('/api/tides', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ portId }),
+        });
+        const data = await response.json();
+        setPortData(prev => ({ ...prev, [portId]: data }));
+      } catch (error) {
+        console.error(`Error loading ${portId}:`, error);
+      }
     }
   };
 
@@ -278,6 +308,71 @@ export default function Home() {
                 ⚠️ Automatique toutes les 12h · Ne pas appeler manuellement
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Tabs des ports avec JSON */}
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          padding: '2rem',
+          border: '1px solid rgba(255,255,255,0.1)',
+          marginBottom: '2rem',
+        }}>
+          <h2 style={{ margin: '0 0 1.5rem', color: '#fff', fontSize: '1.5rem' }}>
+            📊 Port Data (JSON)
+          </h2>
+
+          {/* Tabs */}
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            marginBottom: '1.5rem',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            paddingBottom: '0.5rem',
+          }}>
+            {(['dunkerque', 'le-crouesty', 'biarritz'] as PortId[]).map((portId) => (
+              <button
+                key={portId}
+                onClick={() => setActiveTab(portId)}
+                style={{
+                  background: activeTab === portId ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255,255,255,0.05)',
+                  border: activeTab === portId ? '1px solid #3b82f6' : '1px solid transparent',
+                  color: activeTab === portId ? '#fff' : '#9ca3af',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: activeTab === portId ? '600' : '400',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {portId === 'dunkerque' && '⚓ Dunkerque'}
+                {portId === 'le-crouesty' && '⛵ Le Crouesty'}
+                {portId === 'biarritz' && '🏄 Biarritz'}
+              </button>
+            ))}
+          </div>
+
+          {/* JSON Content */}
+          <div style={{
+            background: '#1e1e1e',
+            borderRadius: '8px',
+            padding: '1.5rem',
+            maxHeight: '500px',
+            overflowY: 'auto',
+            fontFamily: 'monospace',
+          }}>
+            <pre style={{
+              margin: 0,
+              color: '#d4d4d4',
+              fontSize: '0.85rem',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}>
+              {portData[activeTab] ? JSON.stringify(portData[activeTab], null, 2) : 'Chargement...'}
+            </pre>
           </div>
         </div>
 
