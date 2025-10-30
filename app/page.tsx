@@ -24,6 +24,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<PortId>('brest');
   const [portData, setPortData] = useState<Partial<Record<PortId, any>>>({});
+  const [coefficientData, setCoefficientData] = useState<{
+    coefficient: number;
+    phase: 'rising' | 'falling';
+    detail: { portsUsed: number; portsTotal: number; outliers: string[] };
+  } | null>(null);
 
   useEffect(() => {
     // Charger le statut au démarrage
@@ -43,6 +48,15 @@ export default function Home() {
       const response = await fetch('/api/debug/cache?portId=le-crouesty');
       const data = await response.json();
       setStatus(data);
+
+      // Charger le coefficient France depuis le cache
+      const coeffResponse = await fetch('/api/debug/coefficient');
+      if (coeffResponse.ok) {
+        const coeffData = await coeffResponse.json();
+        if (coeffData.success) {
+          setCoefficientData(coeffData.data);
+        }
+      }
     } catch (error) {
       console.error('Error loading status:', error);
     } finally {
@@ -194,6 +208,48 @@ export default function Home() {
                 </>
               ) : '...'}
             </div>
+          </div>
+
+          {/* Coefficient France */}
+          <div style={{
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+              Coefficient France 🇫🇷
+            </div>
+            {coefficientData ? (
+              <>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  color: coefficientData.phase === 'rising' ? '#fb923c' : '#60a5fa',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  {coefficientData.coefficient}
+                  <span style={{ fontSize: '1.2rem' }}>
+                    {coefficientData.phase === 'rising' ? '↗️' : '↘️'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+                  {coefficientData.detail.portsUsed}/{coefficientData.detail.portsTotal} ports
+                  {coefficientData.detail.outliers.length > 0 && (
+                    <span style={{ marginLeft: '0.5rem' }}>
+                      (excl: {coefficientData.detail.outliers.join(', ')})
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#888' }}>
+                ...
+              </div>
+            )}
           </div>
 
           {/* Crédits WorldTides */}
