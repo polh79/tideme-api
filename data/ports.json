@@ -1,6 +1,15 @@
 {
   "ports": [
     {
+      "id": "brest",
+      "name": "Brest",
+      "latitude": 48.3833,
+      "longitude": -4.4950,
+      "region": "Bretagne",
+      "department": "Finistère",
+      "emoji": "⚓"
+    },
+    {
       "id": "dunkerque",
       "name": "Dunkerque",
       "latitude": 51.0343,
@@ -8,6 +17,60 @@
       "region": "Hauts-de-France",
       "department": "Nord",
       "emoji": "⚓"
+    },
+    {
+      "id": "calais",
+      "name": "Calais",
+      "latitude": 50.9706,
+      "longitude": 1.8518,
+      "region": "Hauts-de-France",
+      "department": "Pas-de-Calais",
+      "emoji": "⛴️"
+    },
+    {
+      "id": "boulogne",
+      "name": "Boulogne-sur-Mer",
+      "latitude": 50.7264,
+      "longitude": 1.5771,
+      "region": "Hauts-de-France",
+      "department": "Pas-de-Calais",
+      "emoji": "🎣"
+    },
+    {
+      "id": "dieppe",
+      "name": "Dieppe",
+      "latitude": 49.9334,
+      "longitude": 1.0833,
+      "region": "Normandie",
+      "department": "Seine-Maritime",
+      "emoji": "⛵"
+    },
+    {
+      "id": "le-havre",
+      "name": "Le Havre",
+      "latitude": 49.4944,
+      "longitude": 0.1079,
+      "region": "Normandie",
+      "department": "Seine-Maritime",
+      "emoji": "🚢"
+    },
+    {
+      "id": "cherbourg",
+      "name": "Cherbourg",
+      "latitude": 49.6500,
+      "longitude": -1.6167,
+      "region": "Normandie",
+      "department": "Manche",
+      "emoji": "⚓"
+    },
+    {
+      "id": "saint-malo",
+      "name": "Saint-Malo",
+      "latitude": 48.6500,
+      "longitude": -2.0167,
+      "region": "Bretagne",
+      "department": "Ille-et-Vilaine",
+      "emoji": "🏰"
     },
     {
       "id": "le-crouesty",
@@ -19,6 +82,33 @@
       "emoji": "⛵"
     },
     {
+      "id": "la-rochelle",
+      "name": "La Rochelle",
+      "latitude": 46.1591,
+      "longitude": -1.1520,
+      "region": "Nouvelle-Aquitaine",
+      "department": "Charente-Maritime",
+      "emoji": "🗼"
+    },
+    {
+      "id": "royan",
+      "name": "Royan",
+      "latitude": 45.6233,
+      "longitude": -1.0283,
+      "region": "Nouvelle-Aquitaine",
+      "department": "Charente-Maritime",
+      "emoji": "🏖️"
+    },
+    {
+      "id": "arcachon",
+      "name": "Arcachon",
+      "latitude": 44.6611,
+      "longitude": -1.1662,
+      "region": "Nouvelle-Aquitaine",
+      "department": "Gironde",
+      "emoji": "🦪"
+    },
+    {
       "id": "biarritz",
       "name": "Biarritz",
       "latitude": 43.4832,
@@ -26,6 +116,24 @@
       "region": "Pays Basque",
       "department": "Pyrénées-Atlantiques",
       "emoji": "🏄"
+    },
+    {
+      "id": "saint-jean-de-luz",
+      "name": "Saint-Jean-de-Luz",
+      "latitude": 43.3881,
+      "longitude": -1.6608,
+      "region": "Pays Basque",
+      "department": "Pyrénées-Atlantiques",
+      "emoji": "🐟"
+    },
+    {
+      "id": "marseille",
+      "name": "Marseille",
+      "latitude": 43.2965,
+      "longitude": 5.3698,
+      "region": "Provence-Alpes-Côte d'Azur",
+      "department": "Bouches-du-Rhône",
+      "emoji": "⛵"
     }
   ]
 }

@@ -114,8 +114,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calculer coefficient
-    const coefficient = calculateCoefficient(maxTide.height, minTide.height);
+    // Récupérer coefficient depuis cache global (calculé par CRON multi-ports)
+    const coefficientCache = await getFromCache<{
+      coefficient: number;
+      phase: 'rising' | 'falling';
+    }>('france:coefficient');
+
+    const coefficient = coefficientCache?.coefficient || calculateCoefficient(maxTide.height, minTide.height);
+    const coefficientPhase = coefficientCache?.phase || 'rising';
 
     // Calculer niveau d'eau normalisé (0-1) pour animation
     const waterLevel = calculateWaterLevel(currentHeight, minTide.height, maxTide.height);
@@ -151,6 +157,7 @@ export async function POST(request: NextRequest) {
         minTide,
         currentHeight: Math.round(currentHeight * 100) / 100, // 2 décimales
         coefficient,
+        coefficientPhase, // 'rising' ou 'falling' (basé sur 15 ports)
         isRising,
         waterLevel: Math.round(waterLevel * 100) / 100, // 2 décimales
       },
