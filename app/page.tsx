@@ -2,17 +2,28 @@
 
 import { useState, useEffect } from 'react';
 
-type PortId = 'dunkerque' | 'le-crouesty' | 'biarritz';
+type PortId =
+  | 'brest'
+  | 'dunkerque'
+  | 'calais'
+  | 'boulogne'
+  | 'dieppe'
+  | 'le-havre'
+  | 'cherbourg'
+  | 'saint-malo'
+  | 'le-crouesty'
+  | 'la-rochelle'
+  | 'royan'
+  | 'arcachon'
+  | 'biarritz'
+  | 'saint-jean-de-luz'
+  | 'marseille';
 
 export default function Home() {
   const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<PortId>('dunkerque');
-  const [portData, setPortData] = useState<Record<PortId, any>>({
-    'dunkerque': null,
-    'le-crouesty': null,
-    'biarritz': null,
-  });
+  const [activeTab, setActiveTab] = useState<PortId>('brest');
+  const [portData, setPortData] = useState<Partial<Record<PortId, any>>>({});
 
   useEffect(() => {
     // Charger le statut au démarrage
@@ -40,7 +51,23 @@ export default function Home() {
   };
 
   const loadAllPorts = async () => {
-    const ports: PortId[] = ['dunkerque', 'le-crouesty', 'biarritz'];
+    const ports: PortId[] = [
+      'brest',
+      'dunkerque',
+      'calais',
+      'boulogne',
+      'dieppe',
+      'le-havre',
+      'cherbourg',
+      'saint-malo',
+      'le-crouesty',
+      'la-rochelle',
+      'royan',
+      'arcachon',
+      'biarritz',
+      'saint-jean-de-luz',
+      'marseille',
+    ];
 
     for (const portId of ports) {
       try {
@@ -302,7 +329,7 @@ export default function Home() {
                 <code style={{ color: '#a5f3fc', fontSize: '1.1rem' }}>/api/cron/refresh</code>
               </div>
               <div style={{ color: '#9ca3af', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                🔒 Refresh cache (3 ports) - Nécessite Authorization header
+                🔒 Refresh cache (15 ports) - Nécessite Authorization header
               </div>
               <div style={{ color: '#ef4444', fontSize: '0.85rem' }}>
                 ⚠️ Automatique toutes les 12h · Ne pas appeler manuellement
@@ -324,35 +351,71 @@ export default function Home() {
             📊 Port Data (JSON)
           </h2>
 
-          {/* Tabs */}
+          {/* Tabs - Scrollable */}
           <div style={{
-            display: 'flex',
-            gap: '0.5rem',
+            overflowX: 'auto',
             marginBottom: '1.5rem',
             borderBottom: '1px solid rgba(255,255,255,0.1)',
             paddingBottom: '0.5rem',
           }}>
-            {(['dunkerque', 'le-crouesty', 'biarritz'] as PortId[]).map((portId) => (
-              <button
-                key={portId}
-                onClick={() => setActiveTab(portId)}
-                style={{
-                  background: activeTab === portId ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255,255,255,0.05)',
-                  border: activeTab === portId ? '1px solid #3b82f6' : '1px solid transparent',
-                  color: activeTab === portId ? '#fff' : '#9ca3af',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: activeTab === portId ? '600' : '400',
-                  transition: 'all 0.2s',
-                }}
-              >
-                {portId === 'dunkerque' && '⚓ Dunkerque'}
-                {portId === 'le-crouesty' && '⛵ Le Crouesty'}
-                {portId === 'biarritz' && '🏄 Biarritz'}
-              </button>
-            ))}
+            <div style={{ display: 'flex', gap: '0.5rem', minWidth: 'max-content' }}>
+              {([
+                'brest',
+                'dunkerque',
+                'calais',
+                'boulogne',
+                'dieppe',
+                'le-havre',
+                'cherbourg',
+                'saint-malo',
+                'le-crouesty',
+                'la-rochelle',
+                'royan',
+                'arcachon',
+                'biarritz',
+                'saint-jean-de-luz',
+                'marseille',
+              ] as PortId[]).map((portId) => {
+                const labels: Record<PortId, string> = {
+                  'brest': '⚓ Brest',
+                  'dunkerque': '⚓ Dunkerque',
+                  'calais': '⛴️ Calais',
+                  'boulogne': '🎣 Boulogne',
+                  'dieppe': '⛵ Dieppe',
+                  'le-havre': '🚢 Le Havre',
+                  'cherbourg': '⚓ Cherbourg',
+                  'saint-malo': '🏰 Saint-Malo',
+                  'le-crouesty': '⛵ Le Crouesty',
+                  'la-rochelle': '🗼 La Rochelle',
+                  'royan': '🏖️ Royan',
+                  'arcachon': '🦪 Arcachon',
+                  'biarritz': '🏄 Biarritz',
+                  'saint-jean-de-luz': '🐟 St-Jean-Luz',
+                  'marseille': '⛵ Marseille',
+                };
+
+                return (
+                  <button
+                    key={portId}
+                    onClick={() => setActiveTab(portId)}
+                    style={{
+                      background: activeTab === portId ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255,255,255,0.05)',
+                      border: activeTab === portId ? '1px solid #3b82f6' : '1px solid transparent',
+                      color: activeTab === portId ? '#fff' : '#9ca3af',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      fontWeight: activeTab === portId ? '600' : '400',
+                      transition: 'all 0.2s',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {labels[portId]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* JSON Content */}
