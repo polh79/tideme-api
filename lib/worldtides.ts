@@ -73,12 +73,17 @@ export async function fetchTideExtremes(port: Port): Promise<TideExtreme[]> {
 /**
  * Fetch toutes les données de marées pour un port
  * Compatible avec l'ancienne fonction fetchTideData de stormglass.ts
+ * IMPORTANT: Décrémente automatiquement le compteur de crédits
  */
 export async function fetchTideData(port: Port) {
   console.log(`[API] Fetching tide data for port: ${port.name} (WorldTides)`);
 
   try {
     const tides = await fetchTideExtremes(port);
+
+    // Décrémenter le compteur de crédits après succès
+    const { decrementCreditsCounter } = await import('./credits');
+    await decrementCreditsCounter();
 
     return {
       port,
@@ -89,4 +94,52 @@ export async function fetchTideData(port: Port) {
     console.error(`[API] Error fetching tide data for ${port.name}:`, error);
     throw error;
   }
+}
+
+/**
+ * Récupère les crédits restants du compte WorldTides
+ * Fait un appel minimal pour lire le callCount
+ */
+export async function fetchCreditsRemaining(): Promise<{
+  callCount: number;
+  creditLimit: number;
+  creditsRemaining: number;
+}> {
+  // Faire un appel minimal (1 jour, extremes seulement)
+  const params = new URLSearchParams({
+    extremes: 'true',
+    lat: '48.383',  // Brest
+    lon: '-4.5',
+    key: WORLDTIDES_API_KEY,
+    days: '1',
+  });
+
+  const url = `${BASE_URL}?${params}`;
+
+  console.log(`[WorldTides] Fetching credit info...`);
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`WorldTides API error: ${response.status} ${errorText}`);
+  }
+
+  const json: WorldTidesResponse = await response.json();
+
+  if (json.error) {
+    throw new Error(`WorldTides API error: ${json.error}`);
+  }
+
+  // WorldTides compte de 0 à 20,000 (gratuit)
+  const creditLimit = 20000;
+  const creditsRemaining = creditLimit - json.callCount;
+
+  console.log(`[WorldTides] 📊 Credits: ${json.callCount} / ${creditLimit} (${creditsRemaining} remaining)`);
+
+  return {
+    callCount: json.callCount,
+    creditLimit,
+    creditsRemaining,
+  };
 }

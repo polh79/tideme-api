@@ -25,22 +25,27 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<PortId>('brest');
   const [portData, setPortData] = useState<Partial<Record<PortId, any>>>({});
   const [coefficientData, setCoefficientData] = useState<{
-    coefficient: number;
+    current: number;
+    morning: number;
+    afternoon: number;
     phase: 'rising' | 'falling';
-    detail: { portsUsed: number; portsTotal: number; outliers: string[] };
+    period: 'morning' | 'afternoon';
+  } | null>(null);
+  const [credits, setCredits] = useState<{
+    used: number;
+    limit: number;
+    remaining: number;
+    percentage: number;
   } | null>(null);
 
   useEffect(() => {
-    // Charger le statut au démarrage
+    // Charger les données UNE SEULE FOIS au démarrage
     loadStatus();
     loadAllPorts();
+    loadCredits();
 
-    // Rafraîchir toutes les 30 secondes
-    const interval = setInterval(() => {
-      loadStatus();
-      loadAllPorts();
-    }, 30000);
-    return () => clearInterval(interval);
+    // PAS D'AUTO-REFRESH : c'est un dashboard admin, pas besoin de gaspiller Upstash
+    // Pour refresh : recharger la page (F5)
   }, []);
 
   const loadStatus = async () => {
@@ -61,6 +66,21 @@ export default function Home() {
       console.error('Error loading status:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCredits = async () => {
+    try {
+      // Charger les crédits WorldTides (cachés 1h côté serveur)
+      const creditsResponse = await fetch('/api/credits');
+      if (creditsResponse.ok) {
+        const creditsData = await creditsResponse.json();
+        if (creditsData.success) {
+          setCredits(creditsData.credits);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading credits:', error);
     }
   };
 
@@ -231,18 +251,16 @@ export default function Home() {
                   alignItems: 'center',
                   gap: '0.5rem'
                 }}>
-                  {coefficientData.coefficient}
+                  {coefficientData.current}
                   <span style={{ fontSize: '1.2rem' }}>
                     {coefficientData.phase === 'rising' ? '↗️' : '↘️'}
                   </span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
-                  {coefficientData.detail.portsUsed}/{coefficientData.detail.portsTotal} ports
-                  {coefficientData.detail.outliers.length > 0 && (
-                    <span style={{ marginLeft: '0.5rem' }}>
-                      (excl: {coefficientData.detail.outliers.join(', ')})
-                    </span>
-                  )}
+                  Matin: {coefficientData.morning} / Après-midi: {coefficientData.afternoon}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '0.25rem' }}>
+                  Brest (SHOM) • {coefficientData.period === 'morning' ? 'Matinée' : 'Après-midi'}
                 </div>
               </>
             ) : (
@@ -263,9 +281,20 @@ export default function Home() {
             <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
               Crédits WorldTides
             </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbbf24' }}>
-              ~19,996 / 20,000
-            </div>
+            {credits ? (
+              <>
+                <div style={{ fontSize: '1.5rem', fontWeight: '600', color: '#fbbf24' }}>
+                  {credits.used.toLocaleString()} / {credits.limit.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+                  {credits.remaining.toLocaleString()} restants ({credits.percentage}%)
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: '1.2rem', fontWeight: '600', color: '#888' }}>
+                ...
+              </div>
+            )}
           </div>
         </div>
 

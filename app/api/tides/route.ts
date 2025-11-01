@@ -6,6 +6,7 @@ import {
   calculateWaterLevel,
   calculateCoefficient,
 } from '@/lib/tideCalculator';
+import { getTodayCoefficient } from '@/lib/coefficientReader';
 import { DEFAULT_CACHE_TTL } from '@/lib/constants';
 import portsData from '@/data/ports.json';
 import type { Port, TideExtreme } from '@/types';
@@ -114,14 +115,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Récupérer coefficient depuis cache global (calculé par CRON multi-ports)
-    const coefficientCache = await getFromCache<{
-      coefficient: number;
-      phase: 'rising' | 'falling';
-    }>('france:coefficient');
+    // Récupérer coefficient depuis JSON statiques SHOM (précision parfaite!)
+    const coefficientData = getTodayCoefficient();
 
-    const coefficient = coefficientCache?.coefficient || calculateCoefficient(maxTide.height, minTide.height);
-    const coefficientPhase = coefficientCache?.phase || 'rising';
+    const coefficient = coefficientData?.current || calculateCoefficient(maxTide.height, minTide.height);
+    const coefficientPhase = coefficientData?.phase || 'rising';
 
     // Calculer niveau d'eau normalisé (0-1) pour animation
     const waterLevel = calculateWaterLevel(currentHeight, minTide.height, maxTide.height);
