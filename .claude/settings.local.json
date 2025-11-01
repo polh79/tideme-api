@@ -18,7 +18,8 @@
       "Bash(npx tsx:*)",
       "Bash(cat:*)",
       "Bash(mkdir:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []

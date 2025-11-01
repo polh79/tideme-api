@@ -1,0 +1,122 @@
+{
+  "10": {
+    "morning": 27,
+    "afternoon": 25
+  },
+  "11": {
+    "morning": 26,
+    "afternoon": 26
+  },
+  "12": {
+    "morning": 29,
+    "afternoon": 35
+  },
+  "13": {
+    "morning": 42,
+    "afternoon": 50
+  },
+  "14": {
+    "morning": 58,
+    "afternoon": 66
+  },
+  "15": {
+    "morning": 73,
+    "afternoon": 81
+  },
+  "16": {
+    "morning": 87,
+    "afternoon": 93
+  },
+  "17": {
+    "morning": 97,
+    "afternoon": 101
+  },
+  "18": {
+    "morning": 104,
+    "afternoon": 105
+  },
+  "19": {
+    "morning": 104,
+    "afternoon": 102
+  },
+  "20": {
+    "morning": 99,
+    "afternoon": 94
+  },
+  "21": {
+    "morning": 88,
+    "afternoon": 81
+  },
+  "22": {
+    "morning": 73,
+    "afternoon": 65
+  },
+  "23": {
+    "morning": 58,
+    "afternoon": 51
+  },
+  "24": {
+    "morning": 46,
+    "afternoon": 46
+  },
+  "25": {
+    "morning": 44,
+    "afternoon": 44
+  },
+  "26": {
+    "morning": 47,
+    "afternoon": 51
+  },
+  "27": {
+    "morning": 56,
+    "afternoon": 61
+  },
+  "28": {
+    "morning": 66,
+    "afternoon": 71
+  },
+  "29": {
+    "morning": 74,
+    "afternoon": 77
+  },
+  "30": {
+    "morning": 80,
+    "afternoon": 81
+  },
+  "01": {
+    "morning": 89,
+    "afternoon": 92
+  },
+  "02": {
+    "morning": 93,
+    "afternoon": 93
+  },
+  "03": {
+    "morning": 93,
+    "afternoon": 91
+  },
+  "04": {
+    "morning": 89,
+    "afternoon": 86
+  },
+  "05": {
+    "morning": 82,
+    "afternoon": 78
+  },
+  "06": {
+    "morning": 73,
+    "afternoon": 68
+  },
+  "07": {
+    "morning": 62,
+    "afternoon": 56
+  },
+  "08": {
+    "morning": 50,
+    "afternoon": 43
+  },
+  "09": {
+    "morning": 37,
+    "afternoon": 32
+  }
+}

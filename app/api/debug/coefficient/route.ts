@@ -1,52 +1,41 @@
 import { NextResponse } from 'next/server';
-import coefficients2025 from '@/data/coefficients/2025.json';
-import coefficients2026 from '@/data/coefficients/2026.json';
+import { getTodayCoefficient } from '@/lib/coefficientReader';
 
 /**
  * GET /api/debug/coefficient
  * Récupère le coefficient SHOM officiel depuis JSON statiques
  * Précision parfaite (±0 points) - Données officielles SHOM
+ * Si fichier mensuel manquant → scraping auto de maree.info
  */
 export async function GET() {
   try {
+    const coeffData = await getTodayCoefficient();
+
+    if (!coeffData) {
+      return NextResponse.json({
+        error: 'Coefficient not found',
+        message: 'No coefficient data available. Scraping may have failed.',
+      }, { status: 404 });
+    }
+
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
     const day = now.getDate();
-
-    const dateKey = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-
-    // Charger le bon fichier selon l'année
-    const coefficientsData: Record<string, { morning: number; afternoon: number }> =
-      year === 2025 ? coefficients2025 : coefficients2026;
-
-    const todayCoef = coefficientsData[dateKey];
-
-    if (!todayCoef) {
-      return NextResponse.json({
-        error: 'Coefficient not found',
-        message: `No coefficient data for ${dateKey}. Update JSON files in data/coefficients/`,
-      }, { status: 404 });
-    }
-
-    // Déterminer si on est matin ou après-midi (avant ou après 12h)
-    const currentHour = now.getHours();
-    const currentPeriod = currentHour < 12 ? 'morning' : 'afternoon';
-    const currentCoefficient = currentPeriod === 'morning' ? todayCoef.morning : todayCoef.afternoon;
-
-    // Calculer la phase en comparant matin vs après-midi (OPTIMISÉ!)
-    const phase = todayCoef.afternoon > todayCoef.morning ? 'rising' : 'falling';
+    const monthStr = month.toString().padStart(2, '0');
+    const dayStr = day.toString().padStart(2, '0');
+    const dateKey = year + '-' + monthStr + '-' + dayStr;
 
     return NextResponse.json({
       success: true,
       data: {
-        current: currentCoefficient,
-        morning: todayCoef.morning,
-        afternoon: todayCoef.afternoon,
-        phase,
-        period: currentPeriod,
+        current: coeffData.current,
+        morning: coeffData.morning,
+        afternoon: coeffData.afternoon,
+        phase: coeffData.phase,
+        period: coeffData.period,
       },
-      source: 'SHOM JSON (données officielles) - Précision parfaite',
+      source: 'SHOM JSON (données officielles) - Précision parfaite + Auto-scraping fallback',
       date: dateKey,
     });
 

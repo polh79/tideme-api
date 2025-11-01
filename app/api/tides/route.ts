@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Récupérer coefficient depuis JSON statiques SHOM (précision parfaite!)
-    const coefficientData = getTodayCoefficient();
+    const coefficientData = await getTodayCoefficient();
 
     const coefficient = coefficientData?.current || calculateCoefficient(maxTide.height, minTide.height);
     const coefficientPhase = coefficientData?.phase || 'rising';
