@@ -109,7 +109,30 @@ Dashboard disponible à `/` avec :
 - Coefficient, hauteur actuelle
 - Prochaines marées haute/basse
 - Direction montante/descendante
+- Compteur de crédits WorldTides (X / 20000)
 - JSON complet
+
+## 🔧 Maintenance
+
+### Réinitialiser le compteur de crédits (après perte Redis)
+
+Si Upstash supprime la base Redis (inactivité 14j), recréer et initialiser :
+
+```bash
+# 1. Créer nouvelle base Redis sur Upstash (Eviction activée)
+# 2. Mettre à jour UPSTASH_REDIS_REST_URL et UPSTASH_REDIS_REST_TOKEN sur Vercel
+# 3. Initialiser le compteur de crédits :
+
+curl -X POST https://tideme-api.vercel.app/api/admin/init-credits \
+  -H "Authorization: Bearer YOUR_CRON_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"remaining": 20000}'
+```
+
+**Notes importantes :**
+- L'eviction doit être **activée** sur Upstash pour éviter les erreurs si la base est pleine
+- Le compteur de crédits est stocké dans Redis avec un TTL de 1 an
+- Sans Redis, le système bascule automatiquement sur cache mémoire (volatile)
 
 ## 🔄 Intégration avec TideMe
 
@@ -126,3 +149,6 @@ Au lieu d'appeler StormGlass directement.
 - **Avant:** Chaque user = 1+ call/jour
 - **Après:** 6 calls/jour partagés par TOUS les users
 - **Capacité:** Supporte des dizaines d'users avec 10 calls/jour gratuits
+
+
+TOON vs JSON
